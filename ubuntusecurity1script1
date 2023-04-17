@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Define variables
+USER="sethkb"
+LOG_FILE="/var/log/auth.log"
+TIME=$(date +%H)
+
+# Check for all logins between midnight and 6 AM
+if [[ "$TIME" -ge 0 && "$TIME" -le 6 ]]; then
+    echo "Suspicious activity detected between midnight and 6 AM:"
+    grep "Accepted" "$LOG_FILE" | grep -E "(user|$USER)" | awk '$2 < "06:"'
+fi
+
+# Check for logins by a specific user
+if grep -q "$USER" "$LOG_FILE"; then
+    echo "Suspicious activity detected for user $USER:"
+    grep "$USER" "$LOG_FILE" | grep "Accepted"
+fi
+
+# Define other red flags here, such as failed login attempts, repeated login attempts, or unusual login locations.
+
+# Check for failed login attempts
+if grep -q "Failed password" "$LOG_FILE"; then
+    echo "Suspicious activity detected: multiple failed login attempts"
+    grep "Failed password" "$LOG_FILE"
+fi
+
+# Check for repeated login attempts
+if grep -q "pam_unix(sshd:auth)" "$LOG_FILE"; then
+    echo "Suspicious activity detected: repeated login attempts"
+    grep "pam_unix(sshd:auth)" "$LOG_FILE"
+fi
+
+# Check for unusual login locations
+if grep -q "Invalid user" "$LOG_FILE"; then
+    echo "Suspicious activity detected: login attempts from unusual locations"
+    grep "Invalid user" "$LOG_FILE"
+fi
+
+exit 0
