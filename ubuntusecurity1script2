@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Set the directory to monitor
+DIRECTORY="/var/log"
+
+# Set the file to store the hash of the previous state
+PREV_HASH_FILE="$DIRECTORY/.prev_hash"
+
+# Check if the previous hash file exists, and create it if not
+if [[ ! -f "$PREV_HASH_FILE" ]]; then
+    touch "$PREV_HASH_FILE"
+fi
+
+# Get the hash of the current state of the directory
+CURRENT_HASH=$(find "$DIRECTORY" -type f -exec sha256sum {} \; | sort | sha256sum | awk '{print $1}')
+
+# Get the hash of the previous state from the file
+PREV_HASH=$(cat "$PREV_HASH_FILE")
+
+# Compare the current and previous hashes
+if [[ "$CURRENT_HASH" != "$PREV_HASH" ]]; then
+    echo "Changes detected in directory: $DIRECTORY"
+    diff <(echo "$PREV_HASH") <(echo "$CURRENT_HASH")
+fi
+
+# Store the current hash in the file for future comparisons
+echo "$CURRENT_HASH" > "$PREV_HASH_FILE"
