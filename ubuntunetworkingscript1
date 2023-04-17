@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Set the name of the output file
+DATE=$(date +"%Y-%m-%d")
+NETSTAT="network_info_${DATE}.txt"
+
+# Create the output file and write a header
+echo "Network Information Dump" > $NETSTAT
+echo "Date: ${DATE}" >> $NETSTAT
+echo "" >> $NETSTAT
+
+# Get the network interfaces and their IP addresses
+echo "Network Interfaces:" | tee -a $NETSTAT
+ip addr show | grep -w inet | awk '{print "  " $2}' | tee -a $NETSTAT
+echo "" >> $NETSTAT
+
+# Get the DNS servers
+echo "DNS Servers:" | tee -a $NETSTAT
+cat /etc/resolv.conf | grep nameserver | awk '{print "  " $2}' | tee -a $NETSTAT
+echo "" >> $NETSTAT
+
+# Get the open ports
+echo "Open Ports:" | tee -a $NETSTAT
+ufw status | tee -a $NETSTAT
+echo "" >> $NETSTAT
+
+# Get the firewall rules
+echo "Firewall Rules:" | tee -a $NETSTAT
+ufw show raw | tee -a $NETSTAT
+echo "" >> $NETSTAT
+
+# Get the network connections
+echo "Network Connections:" | tee -a $NETSTAT
+netstat -tunlp | tee -a $NETSTAT
+echo "" >> $NETSTAT
+
+# Display a message indicating the output file location
+echo "Network information has been dumped to: ${NETSTAT}"
+
